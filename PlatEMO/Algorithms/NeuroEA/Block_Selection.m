@@ -56,7 +56,7 @@ function Del = Truncation(PopObjLast,PopObjAll,K)
             SPopObj = max(PopObjAll,repmat(PopObjLast(i,:),size(PopObjAll,1),1));
             for j = [1:i-1,i+1:size(PopObjAll,1)]
                 %norm计算欧式距离，如：v = [1 -2 3];n = norm(v);a = [0 3];b = [-2 1];d = norm(b-a)
-                %Distance(i,：)存储的是最大前沿中第i个元素与SPopObj所有元素的欧式距离。
+                %Distance(i,：)存储的是最大前沿中第i个元素与SPopObj所有元素的欧式距离。每一行前面存储的是与最大前沿中元素的距离，后面的是与非最大前沿中元素的距离。
                 Distance(i,j) = norm(PopObjLast(i,:)-SPopObj(j,:));
             end
         end
@@ -64,17 +64,25 @@ function Del = Truncation(PopObjLast,PopObjAll,K)
     % - 初始化 Del 为全false向量，表示哪些个体需要被删除
     % - 进入循环，当删除的个体数量小于K时：
     % - 找出尚未被删除的个体索引 Remain
-    % - 执行第67行代码 ：计算并排序每个剩余个体与其他相关个体的距离
+    % - 计算并排序每个剩余个体与其他相关个体的距离
     % - 对排序后的距离矩阵按行排序，得到 Rank
     % - 将拥挤度最高的个体（ Rank(1) ）标记为需要删除
     Del = false(1,size(PopObjLast,1));
+    %如果K为负，说明所有的元素都需要保留，不执行循环。
     while sum(Del) < K
         %找到值为0/false的元素索引：未被标记为删除的最大前沿个体的索引
         Remain   = find(~Del);
         %size(PopObjLast,1)+1:end ：所有非最大前沿个体对应的列（因为 PopObjAll 包含最大前沿和非最大前沿个体）
+        %Distance(Remain,[Remain,size(PopObjLast,1)+1:end])找出未删除的最大前沿个体与未删除的最大前沿个体以及其他前沿中个体的距离。
         %sort(..., 2) ：对每一行进行排序（按距离从小到大）
         Temp     = sort(Distance(Remain,[Remain,size(PopObjLast,1)+1:end]),2);
         [~,Rank] = sortrows(Temp);
+        %选择距离最小的个体（拥挤度最高）进行删除
         Del(Remain(Rank(1))) = true;
     end
+    % 该代码实现了一种基于拥挤距离的选择策略：
+    % - 对于每个剩余的最大前沿个体，计算其与其他个体的距离
+    % - 对这些距离进行排序，得到每个个体的距离分布
+    % - 通过 sortrows(Temp) 选择距离最小的个体（拥挤度最高）进行删除
+    % - 这样可以保持种群的多样性，避免算法收敛到局部最优
 end
