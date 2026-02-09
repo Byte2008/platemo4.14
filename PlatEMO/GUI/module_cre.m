@@ -779,6 +779,7 @@ classdef module_cre < handle
                     Blocks = obj.Graph.Nodes.block;
                     Graph  = adjacency(obj.Graph,'weighted');
                     Blocks.Validity(Graph);
+                    % 创建 NeuroEA 实例，传入搭建好的模块(Blocks)和连接图(Graph)
                     obj.data{1} = NeuroEA('parameter',{Blocks,Graph},'outputFcn',@(~,~)[],'save',1);
                 catch err
                     err = addCause(err,MException('','The algorithm is invalid'));
@@ -787,6 +788,7 @@ classdef module_cre < handle
                 end
                 % Generate the PROBLEM object of algorithm
                 try
+                    %% 2. 生成目标问题对象 (用户选择的测试问题)
                     [name,para] = GUI.GetParameterSetting(obj.app.listD.items(1));
                     obj.data{2} = feval(name,'N',para{1},'M',para{2},'D',para{3},obj.app.listD.items(1).label(4).Text,para{4},'parameter',para(5:end));
                 catch err
@@ -802,8 +804,13 @@ classdef module_cre < handle
                 delete(obj.app.axesE.Children);
                 try
                     % Generate the ALGORITHM object of trainer
+                    % 配置训练器 (Meta-Optimization)，使用遗传算法 (GA) 作为训练器，目标是寻找最优的 Block 参数
                     obj.dataTrain{1} = GA('outputFcn',@obj.outputFcnTrain,'save',1);
-                    % Generate the PROBLEM object of trainer
+                    % Generate the PROBLEM object of trainer     
+                    % 定义训练任务 (UserProblem)
+                    % 决策变量维度 D = 算法中所有 Block 的参数总数
+                    % initFcn: 种群初始化函数 (trainInit)
+                    % objFcn:  目标函数 (trainObj)
                     obj.dataTrain{2} = UserProblem('N',obj.app.editD(1).Value,'maxFE',obj.app.editD(2).Value,'D',length(Blocks.parameters),'lower',Blocks.lowers,'upper',Blocks.uppers,'initFcn',@obj.trainInit,'objFcn',@obj.trainObj,'once',true);
                     % Execute the training
                     obj.dataTrain{1}.Solve(obj.dataTrain{2});
@@ -887,6 +894,7 @@ classdef module_cre < handle
         %% Initialization function for training
         function PopDec = trainInit(obj,N)
             D = length(obj.Graph.Nodes.block.parameters);
+            % 尝试从文件加载已保存的种群 (obj.app.editD(4).Value 是文件路径)
             if exist(obj.app.editD(4).Value,'file')
                 try
                     load(obj.app.editD(4).Value,'-mat','Population');
@@ -898,6 +906,7 @@ classdef module_cre < handle
             else
                 PopDec = [];
             end
+             % 如果加载的数量不足 N，则随机生成剩余个体
             if size(PopDec,1) > N
                 PopDec = PopDec(1:N,:);
             elseif size(PopDec,1) < N
@@ -905,7 +914,10 @@ classdef module_cre < handle
             end
         end
         %% Objective function for training
+        %这是训练的核心评估逻辑。它将一组参数赋值给 NeuroEA 算法，运行算法解决目标问题，并计算性能指标作为适应度。
         function PopObj = trainObj(obj,PopDec)
+            %PopObj 存储每个个体的性能指标
+            % 每一行代表一个个体，每一列代表一次独立运行的结果 (obj.app.editD(3).Value 是运行次数)
             PopObj = zeros(size(PopDec,1),obj.app.editD(3).Value);
             if ~obj.app.checkD.Value    % Evaluation in sequence
                 for i = 1 : size(PopObj,1)
