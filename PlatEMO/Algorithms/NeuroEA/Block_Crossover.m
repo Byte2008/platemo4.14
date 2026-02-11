@@ -61,7 +61,7 @@ classdef Block_Crossover < BLOCK
             for i = 1 : obj.nParents-1
                 %i:obj.nParents-1:end：所有子类对象的第i个父类采样。[size(ParentDec,1)./obj.nParents,size(R,2)]表示[子类个数，维数]
                 %obj.Weight(:,(i-1)*3+1:(i-1)*3+2)所有子类对象的第i个父类采样的均值和标准差。
-                %obj.Fit(:,i)：所有子类对象的第i个父类采样的采样概率。
+                %obj.Fit(:,i)：所有子类对象的第i个父类在【u,σ2】上的正态采样值。
                 R(i:obj.nParents-1:end,:) = ParaSampling([size(ParentDec,1)./obj.nParents,size(R,2)],obj.Weight(:,(i-1)*3+1:(i-1)*3+2),obj.Fit(:,i));
             end
             %创建一个存储后代决策变量的矩阵,

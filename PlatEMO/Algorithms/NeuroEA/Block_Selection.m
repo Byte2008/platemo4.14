@@ -21,6 +21,7 @@ classdef Block_Selection < BLOCK
         end
         %% Main procedure of the block
         function Main(obj,Problem,Precursors,Ratio)
+            %从前驱节点收集输出，并对解进行评估。
             Population = obj.Gather(Problem,Precursors,Ratio,1,1);
             if Problem.M == 1	% For single-objective optimization
                 [~,rank]   = sort(FitnessSingle(Population));
