@@ -60,6 +60,8 @@ classdef VPPSO < ALGORITHM
     end
 end
 
+%% Update first swarm (particles with velocity)
+%%Population(1:N) = UpdateFirstSwarm(Problem,Population(1:N),Pbest,Gbest,c1,c2,ww);
 function Offspring = UpdateFirstSwarm(Problem,Particle,Pbest,Gbest,c1,c2,ww)
 %UpdateFirstSwarm - Update the first swarm with velocity-based PSO
 %
@@ -102,6 +104,7 @@ function Offspring = UpdateFirstSwarm(Problem,Particle,Pbest,Gbest,c1,c2,ww)
     Offspring = Problem.Evaluation(OffDec,OffVel);
 end
 
+%Population(N+1:end) = UpdateSecondSwarm(Problem,Gbest,ww,Problem.N-N);
 function Offspring = UpdateSecondSwarm(Problem,Gbest,ww,N)
 %UpdateSecondSwarm - Update the second swarm without velocity
 %
