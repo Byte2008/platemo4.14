@@ -18,6 +18,9 @@ classdef BLOCK < handle & matlab.mixin.Heterogeneous
         upper;          % Upper bound of each parameter
         output;         % Current output of the block
         nextOut = 1;	% Index of next output solution
+        bestFitness;    % Best fitness value (minimum) of all individuals
+        bestDec;        % Decision vector corresponding to the best fitness
+        meanDec;        % Mean of decision vectors of all individuals
     end
     properties
         trainTime = 0;	% Number of training times

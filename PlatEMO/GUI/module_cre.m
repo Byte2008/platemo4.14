@@ -812,6 +812,7 @@ classdef module_cre < handle
                     % initFcn: 种群初始化函数 (trainInit)
                     % objFcn:  目标函数 (trainObj)
                     obj.dataTrain{2} = UserProblem('N',obj.app.editD(1).Value,'maxFE',obj.app.editD(2).Value,'D',length(Blocks.parameters),'lower',Blocks.lowers,'upper',Blocks.uppers,'initFcn',@obj.trainInit,'objFcn',@obj.trainObj,'once',true);
+
                     % Execute the training
                     obj.dataTrain{1}.Solve(obj.dataTrain{2});
                     obj.cb_stoptrain();
@@ -876,12 +877,15 @@ classdef module_cre < handle
             end
             % Save the results
             try
+                %自动保存机制 ， 每次训练迭代后自动保存；
+                %保存内容:Blocks: 配置了最优参数的Block对象数组；Graph: Block之间的连接图（邻接矩阵）Population: 当前训练器的完整种群（用于断点续训）
+                %默认保存路径: myAlgorithm.mat
                 Population = Algorithm.result{end};
-                [~,best]   = min(Population.objs);
-                obj.Graph.Nodes.block.ParameterSet(Population(best).dec);
+                [~,best]   = min(Population.objs);% 找到最优个体
+                obj.Graph.Nodes.block.ParameterSet(Population(best).dec);% 设置最优参数
                 Blocks = obj.Graph.Nodes.block';
                 Graph  = full(adjacency(obj.Graph,'weighted'));
-                save(obj.app.editD(4).Value,'Blocks','Graph','Population','-mat');
+                save(obj.app.editD(4).Value,'Blocks','Graph','Population','-mat');% 保存到文件
             catch err
                 uialert(obj.GUI.app.figure,'Fail to save the population, please refer to the command window for details.','Error');
                 rethrow(err);

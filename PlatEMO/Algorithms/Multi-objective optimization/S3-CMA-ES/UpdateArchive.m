@@ -10,7 +10,8 @@ function Archive = UpdateArchive(N,combinePopulation)
 %--------------------------------------------------------------------------
 
 % This function is written by Huangke Chen
-
+    %档案更新（环境选择）
+- 先取一层非支配解；若超额，则保留“极端解”（和单位向量最接近的点），再用Lp距离（p=0.5）逐个选择与已选集合“最远”的解，保证分布性。
     % Remove the dominated solutions
     Archive = combinePopulation(NDSort(combinePopulation.objs,1)==1);
     

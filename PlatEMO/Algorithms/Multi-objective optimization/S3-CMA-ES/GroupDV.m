@@ -10,7 +10,7 @@ function group = GroupDV(Problem,DV,PV,nPerGroup)
 %--------------------------------------------------------------------------
 
 % This function is written by Huangke Chen
-
+    %将DV分为nPerGroup组，每组nPerGroup维，每组的控制能力从大到小排序，前nPerGroup−1组为PV，其余为DV。利用构造的四点组合（fp1、fhat(i)、fhat(j)、fp4）在目标空间的差异，计算λ矩阵作为相关性指标，并用误差上界进行阈值判断，得到变量“连边”。再对图做广度优先的连通分量划分：非独立变量形成各自的组；独立变量按nPerGroup等分打包。
    ub  = Problem.upper(DV);
    lb  = Problem.lower(DV); 
    dim = length(DV);	% the dim of the distance variables

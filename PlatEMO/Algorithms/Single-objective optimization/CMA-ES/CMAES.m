@@ -1,7 +1,7 @@
 classdef CMAES < ALGORITHM
 % <2001> <single> <real/integer> <large/none> <constrained/none>
 % Covariance matrix adaptation evolution strategy
-
+%法类型：单目标、连续/整数变量均可，采用协方差矩阵自适应进化策略（CMA-ES）实现全局搜索与二阶结构学习。
 %------------------------------- Reference --------------------------------
 % N. Hansen and A. Ostermeier. Completely derandomized selfadaptation in
 % evolution strategies. Evolutionary Computation, 2001, 9(2): 159-195.
@@ -17,6 +17,10 @@ classdef CMAES < ALGORITHM
     methods
         function main(Algorithm,Problem)
             %% Initialization
+            %- 父代数量与权重- mu 为父代数 mu ，取种群规模的一半。
+            %- 权重 w 采用对数型递减并归一化 w ，偏向前排精英。- 有效样本数 mu_eff mu_eff ，衡量权重分散度。
+            %- 步长控制参数- cs（步长路径学习率）、ds（阻尼因子）与 ENN（标准正态向量范数期望）见 cs,ds,ENN 。
+            %- 协方差更新参数- cc（协方差路径学习率）、c1（rank-1 权重）、cmu（rank-μ 权重上限）、hth（步长路径阈值）见 cc,c1,cmu,hth 。
             % Number of parents
             mu     = round(Problem.N/2);
             % Parent weights
@@ -34,16 +38,17 @@ classdef CMAES < ALGORITHM
             cmu    = min(1-c1,2*(mu_eff-2+1/mu_eff)/((Problem.D+2)^2+2*mu_eff/2));
             hth    = (1.4+2/(Problem.D+1))*ENN;
             % Initialization
-            Mdec  = unifrnd(Problem.lower,Problem.upper);
-            ps    = zeros(1,Problem.D);
+            Mdec  = unifrnd(Problem.lower,Problem.upper);  %均值 Mdec 在边界内均匀采样 Mdec 。
+            ps    = zeros(1,Problem.D);                    %步长路径 ps、协方差路径 pc 置零，协方差 C=I ps,pc,C 。
             pc    = zeros(1,Problem.D);
             C     = eye(Problem.D);
-            sigma = 0.1*(Problem.upper-Problem.lower);
+            sigma = 0.1*(Problem.upper-Problem.lower);      %初始步长 sigma 取 10% 范围。
             Population = Problem.Initialization(1);
             
             %% Optimization
             while Algorithm.NotTerminated(Population)
                 % Sample solutions
+                %采样与评估: 从 N(0, C) 采样步子 Pstep（对每个个体） 采样 ，构造候选解 Pdec = Mdec + sigma * Pstep 并评估 构造与评估 。
                 for i = 1 : Problem.N
                     Pstep(i,:) = mvnrnd(zeros(1,Problem.D),C);
                 end

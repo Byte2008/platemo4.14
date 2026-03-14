@@ -14,12 +14,26 @@ classdef Block_Population < BLOCK
         %% Main procedure of the block，实现了父类定义的Main方法，用于从Precursors中收集个体并赋值给output属性
         function Main(obj,Problem,Precursors,Ratio)
             obj.output = obj.Gather(Problem,Precursors,Ratio,1,1);
+            % Calculate and store the best fitness value (minimum) and corresponding decision vector
+            if ~isempty(obj.output)
+                [obj.bestFitness, bestIdx] = min([obj.output.objs]);
+                obj.bestDec = obj.output(bestIdx).dec;
+                % Calculate and store the mean of decision vectors
+                obj.meanDec = mean(obj.output.decs, 1);
+            end
         end
         %% Initialize the solutions
         function Initialization(obj,Population)
             %deal(Population) ：这是 MATLAB 的一个函数，当它只有一个输入但有多个输出时，它会将 同一个输入值 赋值给所有的输出。
             % [obj.output] ：这是一个逗号分隔列表（Comma-Separated List），代表对象数组中每个对象的 output 属性。
             [obj.output] = deal(Population);
+            % Initialize best fitness and decision vector
+            if ~isempty(Population)
+                [obj.bestFitness, bestIdx] = min([Population.objs]);
+                obj.bestDec = Population(bestIdx).dec;
+                % Initialize mean of decision vectors
+                obj.meanDec = mean(Population.decs, 1);
+            end
         end
     end
 end

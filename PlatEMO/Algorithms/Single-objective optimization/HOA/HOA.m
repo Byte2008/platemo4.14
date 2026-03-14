@@ -1,4 +1,4 @@
-classdef new_HOA < ALGORITHM
+classdef HOA < ALGORITHM
 % <2021> <single> <real/integer> <large/none> <constrained/none>
 % Hiking Optimization Algorithm
 % theta_max --- 50 --- Maximum elevation angle

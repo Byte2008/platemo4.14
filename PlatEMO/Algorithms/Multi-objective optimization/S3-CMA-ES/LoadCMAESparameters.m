@@ -10,7 +10,7 @@ function tempPara = LoadCMAESparameters(Problem, groups, popSize)
 %--------------------------------------------------------------------------
 
 % This function is written by Huangke Chen
-
+    %为每个子群体的每个DV分组加载一套CMA-ES参数（群体规模、权重、学习率等）。
    para.lambda = popSize;	% population size, offspring number   
    tempPara    = repmat(para,1,length(groups));
    

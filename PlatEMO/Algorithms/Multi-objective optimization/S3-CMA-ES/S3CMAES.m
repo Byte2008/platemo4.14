@@ -21,13 +21,13 @@ classdef S3CMAES < ALGORITHM
 
     methods
         function main(Algorithm,Problem)
-            %% Detect the group of each distance variable
+            %% Detect the group of each distance variable，逐维改变该维，观测NDSort的最大前沿层数来衡量“对目标的控制能力”，选取前M−1维为PV，其余为DV。
             nPer      = 50;	% Sample size to divide the convergence- and diversity-related variables
             nPerGroup = 35;	% the group size for separative variables
 
             [PV, DV] = ControlVariableAnalysis(Problem,nPer);	% divide the convergence- and diversity-related variables        
             Groups   = GroupDV(Problem,DV,PV,nPerGroup);     	% divide the convergence-related variables based on correlation
-
+            %构造popN个小子群体，每个子群体的PV一致（在PV空间中随机设定），DV初值相同。
             popN = 5;	% the number of sub-populations
             % V: random unit vectors in diversity space
             V = 0.05 + 0.9*rand(popN,length(PV));
@@ -66,7 +66,7 @@ classdef S3CMAES < ALGORITHM
                     if stopTag(p)	% if the subpopulaton has converged, then no evolve it
                         continue;
                     end
-
+                    %对每个子群体p、每个分组g，调用Operator对该分组维度进行一次CMA-ES更新，其他维度用bestmem填充后整体评估适应度；记录该分组的最优个体进入档案。
                     tempDecs = BigPopulation{p};	% obtain the p-th population
                     PVDecs   = tempDecs(:,PV);
                     bestmem  = tempDecs(1,:);   	% select the first individual as best member
@@ -82,7 +82,7 @@ classdef S3CMAES < ALGORITHM
                     end
                     Archive          = [Archive,BestIndividual];            
                     BigPopulation{p} = tempDecs;	% record the new position for this small population
-
+                    %子群体收敛判定：若本轮最佳值与上轮差异低于阈值unChangeThr，则标记为停止并把最优个体加入“收敛解集合”。
                     if abs(lastBestValA(p)-BestVal) < unChangeThr	% check whether the sub population has converged
                         unUpdateNum(p)       = unUpdateNum(p) + 1;
                         stopTag(p)           = true;
@@ -91,12 +91,12 @@ classdef S3CMAES < ALGORITHM
                     lastBestValA(p) = BestVal;
                 end
 
-                % generate new sub-populations for next stage
+                % generate new sub-populations for next stage，触发条件：所有子群体均停止，或FE超过maxFE的60%。
                 Tag = Problem.FE > 0.6*Problem.maxFE && firstTag;
                 if sum(stopTag) == length(stopTag) || Tag 
                     firstTag = false;	% The first stage has been over
 
-                    % evolute the diversity-related variables
+                    % evolute the diversity-related variables，在档案的PV上执行差分变异（DE/rand/1，CR=0.2，F=0.5，执行200次），并进行边界处理，再评估并用环境选择更新档案。
                     for repPV = 1 : 200  % 200 denotes the repeat times for diversity-related variables
                         CR      = 0.2;
                         F       = 0.5;
@@ -131,7 +131,7 @@ classdef S3CMAES < ALGORITHM
                     ConvergedSolutionSet = [];
                 end
 
-                % Obtain the output solutions
+                % Obtain the output solutions，当FE达到上限时，从每个子群体的首个个体汇总评估，再经环境选择得到最终档案作为输出。
                 if Problem.FE >= Problem.maxFE
                     Decs = zeros(length(BigPopulation),Problem.D);
                     for bp = 1 : length(BigPopulation)
